@@ -146,6 +146,16 @@ public class Room {
         other.getConnections().set(otherIndex, this);
     }
 
+    // these methods create one-way connections
+    public void connectRoomsDirect(Room other, String direction){
+        int index = directionToInt(direction);
+        this.getConnections().set(index, other);
+    }
+
+    public void connectRoomsDirect(Room other, int index){
+        this.getConnections().set(index, other);
+    }
+
     public String toString(){
         ArrayList<String> connectionNames = new ArrayList<String>();
         int index = 0;

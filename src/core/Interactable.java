@@ -25,6 +25,7 @@ public class Interactable {
     public void setPossible(ArrayList<String> possible){possibleNames = possible;}
 
     public void interact(){
+        // Default interaction behavior
         System.out.println("You interact with the "+nameString+". Nothing happens.");
     }
 
