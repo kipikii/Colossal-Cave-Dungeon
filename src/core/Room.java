@@ -1,6 +1,8 @@
 package core;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
+import interactables.LeverInteractable;
 
 public class Room {
     private String nameString;
@@ -118,14 +120,7 @@ public class Room {
 
     public void connectRooms(Room other, String direction){
         int index = directionToInt(direction);
-        int otherIndex = (index + 3) % 6;
-        if (this.getConnections().get(index) != null || other.getConnections().get(otherIndex) != null){
-            System.out.println(String.format("Prevented override of established pathway between %s and %s",
-        this.getName(), other.getName()));
-        return;
-        }
-        this.getConnections().set(index, other);
-        other.getConnections().set(otherIndex, this);
+        connectRooms(other, index);
     }
 
     // makes a potentially non-Euclidean connection between two rooms
@@ -142,8 +137,7 @@ public class Room {
     public void connectRoomsDirect(Room other, String direction, String otherDirection){
         int index = directionToInt(direction);
         int otherIndex = directionToInt(otherDirection);
-        this.getConnections().set(index, other);
-        other.getConnections().set(otherIndex, this);
+        connectRoomsDirect(other, index, otherIndex);
     }
 
     // these methods create one-way connections
@@ -156,8 +150,25 @@ public class Room {
         this.getConnections().set(index, other);
     }
 
+    public void connectRoomsConditional(Room other, int index, String booleanCond){
+        int otherIndex = (index + 3) % 6;
+        connectRooms(other, index);
+        this.getConnectionRequirements().set(index, booleanCond);
+        this.getConnectionRequirements().set(otherIndex, booleanCond);
+    }
+
+    public void connectRoomsConditional(Room other, String direction, String booleanCond){
+        int index = directionToInt(direction);
+        connectRoomsConditional(other, index, booleanCond);
+    }
+
+    public void addInteractable(Interactable interactable){
+        this.getInteractables().add(interactable);
+    }
+
     public String toString(){
         ArrayList<String> connectionNames = new ArrayList<String>();
+        ArrayList<String> entityNames = new ArrayList<String>();
         int index = 0;
         String directionString;
         for (Room room : this.getConnections()){
@@ -167,7 +178,8 @@ public class Room {
             }
             index++;
         }
-        return String.format("\"%s\" is connected to %s, and contains %s", this.getName(), connectionNames, this.getEntities());
+        for (Entity entity : this.getEntities()){entityNames.add(entity.getName());}
+        return String.format("\"%s\" is connected to %s, and contains %s", this.getName(), connectionNames, entityNames);
     }
 
     public static void deployProbe(Room startingRoom){
@@ -251,12 +263,12 @@ public class Room {
         Room tvRoom = new Room("TV Room");
         Room officeRoom = new Room("Office");
         Room diningRoom = new Room("Dining Room");
-        Room masterBedRoom = new Room("Master Bedroom", "There is a small passage above you that leads up to the attic.");
+        Room masterBedRoom = new Room("Master Bedroom", "There is a small flap in the ceiling above you that leads up to the attic.");
         Room masterCloset = new Room("Master Bedroom Closet");
         Room masterBathRoom = new Room("Master Bathroom");
         Room laundryRoom = new Room("Laundry Room");
         Room guestHallRoom = new Room("Guest Room Hall");
-        Room guestHallBathRoom = new Room("Guest Hall Bathroom", "There is a small passage above you that leads up to the attic.");
+        Room guestHallBathRoom = new Room("Guest Hall Bathroom", "There is a small flap in the ceiling above you that leads up to the attic.");
         Room couchRoom = new Room("Couch Room");
         Room guestBedRoom = new Room("Guest Bedroom");
         Room guestBedRoomBathRoom = new Room("Guest Bedroom Bathroom");
@@ -264,7 +276,12 @@ public class Room {
         Room childBedRoomBathRoom = new Room("Child's Bathroom");
         Room childCloset = new Room("Child's Closet");
         Room westAtticRoom = new Room("West End of the Attic", "There is a small hole below you that leads to the Master Bathroom.");
-        Room eastAtticRoom = new Room("East End of the Attic", "There is a small hole below you that leads to the Guest Hall Bathroom.");    
+        Room eastAtticRoom = new Room("East End of the Attic", "There is a small hole below you that leads to the Guest Hall Bathroom.");
+
+        LeverInteractable secretBasementLever = new LeverInteractable("Switch", "There is a switch on the wall.", 
+        "You flip the switch from OFF to ON. You hear something shift in the distance.", 
+        "You flip the switch from ON to OFF. You hear something shift in the distance.", 
+        new ArrayList<String>(List.of("Switch", "Pull Switch", "Use Switch", "Flip Switch")), "Bunker Door");
 
         southEntrance.connectRooms(centerEntrance, "n");
         southEntrance.connectRooms(tvRoom, "w");
@@ -281,6 +298,9 @@ public class Room {
         masterBedRoom.connectRooms(westAtticRoom, "u");
         kitchenRoom.connectRooms(garageRoom, "s");
         kitchenRoom.connectRooms(laundryRoom, "e");
+
+        // Reserved space for working with LeverInteractable
+
         kitchenRoom.connectRooms(livingRoom, "n");
         livingRoom.connectRooms(guestHallRoom, "e");
         livingRoom.connectRooms(childBedRoom, "n");
