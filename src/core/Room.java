@@ -169,6 +169,8 @@ public class Room {
     public String toString(){
         ArrayList<String> connectionNames = new ArrayList<String>();
         ArrayList<String> entityNames = new ArrayList<String>();
+        ArrayList<String> itemNames = new ArrayList<String>();
+        ArrayList<String> interactableNames = new ArrayList<String>();
         int index = 0;
         String directionString;
         for (Room room : this.getConnections()){
@@ -179,7 +181,9 @@ public class Room {
             index++;
         }
         for (Entity entity : this.getEntities()){entityNames.add(entity.getName());}
-        return String.format("\"%s\" is connected to %s, and contains %s", this.getName(), connectionNames, entityNames);
+        for (Item item : this.getItems()){itemNames.add(item.getName());}
+        for (Interactable interactable : this.getInteractables()){interactableNames.add(interactable.getName());}
+        return String.format("\"%s\" is connected to %s, contains %s entities, %s interactables, %s items", this.getName(), connectionNames, entityNames, interactableNames, itemNames);
     }
 
     public static void deployProbe(Room startingRoom){
