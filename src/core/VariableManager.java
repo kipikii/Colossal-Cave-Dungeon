@@ -12,8 +12,9 @@ public class VariableManager {
         return intMap.get(name);
     }
 
-    public static Boolean getBool(String name){
-        return boolMap.get(name);
+    public static boolean getBool(String name){
+        Boolean val = boolMap.get(name);
+        return val != null && val.booleanValue();
     }
 
     public static void instantiateNew(String name, int number){

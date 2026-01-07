@@ -2,6 +2,8 @@ package core;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Scanner;
+
 import interactables.LeverInteractable;
 
 public class Room {
@@ -24,6 +26,10 @@ public class Room {
 
     public Room(String name, ArrayList<String> requirements){
         this(name, new ArrayList<Room>(Collections.nCopies(6, (Room) null)), requirements, new ArrayList<Entity>(), new ArrayList<Item>(), new ArrayList<Interactable>(), "You're in " + name + ".");
+    }
+
+    public Room(String name, ArrayList<Item> items, int one){
+        this(name, new ArrayList<Room>(Collections.nCopies(6, (Room) null)), new ArrayList<String>(Collections.nCopies(6, (String) null)), new ArrayList<Entity>(), items, new ArrayList<Interactable>(), "");
     }
 
     public Room(String name, ArrayList<Room> connections, ArrayList<String> requirementPassages, ArrayList<Entity> entities, ArrayList<Item> items, ArrayList<Interactable> interactables, String description){
@@ -124,8 +130,8 @@ public class Room {
     }
 
     // makes a potentially non-Euclidean connection between two rooms
-    public void connectRoomsDirect(Room other, int index, int otherIndex){
-        if (this.getConnections().get(index) == null || other.getConnections().get(otherIndex) == null){
+    public void connectRooms(Room other, int index, int otherIndex){
+        if (this.getConnections().get(index) != null || other.getConnections().get(otherIndex) != null){
             System.out.println(String.format("Prevented override of established pathway between %s and %s",
         this.getName(), other.getName()));
         return;
@@ -134,22 +140,23 @@ public class Room {
         other.getConnections().set(otherIndex, this);
     }
 
-    public void connectRoomsDirect(Room other, String direction, String otherDirection){
+    public void connectRooms(Room other, String direction, String otherDirection){
         int index = directionToInt(direction);
         int otherIndex = directionToInt(otherDirection);
-        connectRoomsDirect(other, index, otherIndex);
+        connectRooms(other, index, otherIndex);
     }
 
     // these methods create one-way connections
-    public void connectRoomsDirect(Room other, String direction){
+    public void connectRoomsOneWay(Room other, String direction){
         int index = directionToInt(direction);
         this.getConnections().set(index, other);
     }
 
-    public void connectRoomsDirect(Room other, int index){
+    public void connectRoomsOneWay(Room other, int index){
         this.getConnections().set(index, other);
     }
 
+    // creates a passage that can only be opened under a boolean (VariableManager)
     public void connectRoomsConditional(Room other, int index, String booleanCond){
         int otherIndex = (index + 3) % 6;
         connectRooms(other, index);
@@ -159,7 +166,18 @@ public class Room {
 
     public void connectRoomsConditional(Room other, String direction, String booleanCond){
         int index = directionToInt(direction);
-        connectRoomsConditional(other, index, booleanCond);
+        this.connectRoomsConditional(other, index, booleanCond);
+    }
+
+    // creates a potentially non-Euclidean passage that can only be opened under a boolean (VariableManager)
+    public void connectRoomsConditional(Room other, int index, String booleanCond, int otherIndex){
+        this.connectRooms(other, index, otherIndex);
+        this.getConnectionRequirements().set(index, booleanCond);
+        other.getConnectionRequirements().set(otherIndex, booleanCond);
+    }
+
+    public void connectRoomsConditional(Room other, String direction, String booleanCond, String otherDirection){
+        this.connectRoomsConditional(other, directionToInt(direction), booleanCond, directionToInt(otherDirection));
     }
 
     public void addInteractable(Interactable interactable){
@@ -189,23 +207,27 @@ public class Room {
     public static void deployProbe(Room startingRoom){
         System.out.println("You can quit at any time by typing \"quit\" into the console when the game says \"You're in...\".");
         Room currentRoom = startingRoom;
-        Question asker;
-        Question interactAsker;
         String questionString;
         int loopingInt;
         ArrayList<String> availableOptionsArrayList;
         ArrayList<String> availableInteractsArrayList;
+        ArrayList<String> availableItemsArrayList;
         String userInputString = "";
         int pathwayCount;
         int interactableCount;
+        int itemCount;
+
+        Entity playerEntity = new Entity("You", 10 );
 
         while (!userInputString.equals("quit")){
             pathwayCount = 0;
             interactableCount = 0;
+            itemCount = 0;
             questionString = currentRoom.getDescription();
             loopingInt = 0;
             availableOptionsArrayList = new ArrayList<>();
             availableInteractsArrayList = new ArrayList<>();
+            availableItemsArrayList = new ArrayList<>();
             // add available directions as options for selection as well as their shortened versions
             for (Room givenRoom : currentRoom.getConnections()){
                 String req = currentRoom.getConnectionRequirements().get(loopingInt);
@@ -229,29 +251,60 @@ public class Room {
                 }
                 interactableCount++;
             }
+            // do the same for items
+            for (Item item : currentRoom.getItems()){
+                questionString += "\n"+item.getDescription();
+                for (String option : item.getPossible()){
+                    availableItemsArrayList.add(option);
+                }
+                itemCount++;
+            }
             questionString += "\nWhat would you like to do?";
             availableOptionsArrayList.add("quit");
-            if (interactableCount > 0){availableOptionsArrayList.add("i");availableOptionsArrayList.add("interact");}
-            asker = new Question(questionString, availableOptionsArrayList);
-            userInputString = asker.promptUser();
+            availableOptionsArrayList.addAll(List.of("i", "interact", "g", "get"));
+            userInputString = Helpers.promptUser(questionString, availableOptionsArrayList, false, false);
             if (userInputString.equals("quit")){
                 continue;
             // case for interaction
             } else if (userInputString.equals("i") || userInputString.equals("interact")){
                 if (interactableCount == 1){
                     currentRoom.getInteractables().get(0).interact();
+                } else if (interactableCount < 1) {
+                    System.out.println("There isn't anything to interact with.");
+                    continue;
                 } else {
-                    interactAsker = new Question("Which object do you want to interact with?", availableInteractsArrayList);
-                    userInputString = interactAsker.promptUser();
+                    userInputString = Helpers.promptUser("Which object do you want to interact with?", availableInteractsArrayList, false, false);
                     // check each interactable in the room to see if they are the desired object, then interact
                     for (Interactable interactable : currentRoom.getInteractables()){
                         if (interactable.getPossible().contains(userInputString)){interactable.interact();}
+                    }
+                }
+            // case for item pickups
+            } else if (userInputString.equals("g") || userInputString.equals("get")){
+                if (itemCount == 1){
+                    System.out.println(String.format("You took the %s.", currentRoom.getItems().get(0).getName()));
+                    playerEntity.updateInventory(currentRoom.getItems().get(0), 1);
+                    currentRoom.getItems().remove(currentRoom.getItems().get(0));
+                } else if (itemCount < 1){
+                    System.out.println("There isn't anything to pick up.");
+                    continue;
+                } else {
+                    userInputString = Helpers.promptUser("What would you like to pick up?",
+                    availableItemsArrayList, false, false);
+                    int index = 0;
+                    for (Item item : currentRoom.getItems()){
+                        if (item.getPossible().contains(userInputString)){
+                            playerEntity.updateInventory(item, 1);
+                            currentRoom.getItems().remove(currentRoom.getItems().get(index));
+                        }
+                        index++;
                     }
                 }
             // else must be a direction
             } else {
                 currentRoom = currentRoom.getConnections().get(directionToInt(userInputString));
             }
+            System.out.println();
         }
         
     }
@@ -281,11 +334,16 @@ public class Room {
         Room childCloset = new Room("Child's Closet");
         Room westAtticRoom = new Room("West End of the Attic", "There is a small hole below you that leads to the Master Bathroom.");
         Room eastAtticRoom = new Room("East End of the Attic", "There is a small hole below you that leads to the Guest Hall Bathroom.");
+        
+        Room secretBasement = new Room("Secret Basement", new ArrayList<Item>(List.of(
+            new Item("Photo", "A picture of someone dear rests on the ground.", 
+            new ArrayList<String>(List.of("Photo"))))), 1);
 
         LeverInteractable secretBasementLever = new LeverInteractable("Switch", "There is a switch on the wall.", 
         "You flip the switch from OFF to ON. You hear something shift in the distance.", 
         "You flip the switch from ON to OFF. You hear something shift in the distance.", 
-        new ArrayList<String>(List.of("Switch", "Pull Switch", "Use Switch", "Flip Switch")), "Bunker Door");
+        new ArrayList<String>(List.of("Switch", "Pull Switch", "Use Switch", "Flip Switch", "Lever", "Pull Lever", "Use Lever", "Flip Lever")),
+        "Basement Door");
 
         southEntrance.connectRooms(centerEntrance, "n");
         southEntrance.connectRooms(tvRoom, "w");
@@ -294,16 +352,16 @@ public class Room {
         centerEntrance.connectRooms(officeRoom, "w");
         centerEntrance.connectRooms(northEntrance, "n");
         centerEntrance.getConnections().set(5, formalLivingRoom);
-        northEntrance.connectRoomsDirect(masterBedRoom, "w", "s");
+        northEntrance.connectRooms(masterBedRoom, "w", "s");
         northEntrance.connectRooms(kitchenRoom, "e");
         northEntrance.connectRooms(diningRoom, "n");
-        masterBedRoom.connectRoomsDirect(masterCloset, "w", "n");
+        masterBedRoom.connectRooms(masterCloset, "w", "n");
         masterBedRoom.connectRooms(masterBathRoom, "n");
         masterBedRoom.connectRooms(westAtticRoom, "u");
         kitchenRoom.connectRooms(garageRoom, "s");
         kitchenRoom.connectRooms(laundryRoom, "e");
 
-        // Reserved space for working with LeverInteractable
+        laundryRoom.addInteractable(secretBasementLever);
 
         kitchenRoom.connectRooms(livingRoom, "n");
         livingRoom.connectRooms(guestHallRoom, "e");
@@ -313,14 +371,17 @@ public class Room {
         guestHallRoom.connectRooms(guestHallBathRoom, "e");
         guestHallRoom.connectRooms(guestBedRoom, "s");
         guestHallBathRoom.connectRooms(eastAtticRoom, "u");
-        guestBedRoom.connectRoomsDirect(guestBedRoomBathRoom, "e", "s");
+        guestBedRoom.connectRooms(guestBedRoomBathRoom, "e", "s");
         childBedRoom.connectRooms(childBedRoomBathRoom, "e");
         childBedRoomBathRoom.connectRooms(childCloset, "s");
+        childCloset.connectRoomsConditional(secretBasement, "d", "Basement Door");
         westAtticRoom.connectRooms(eastAtticRoom, "e");
-        deployProbe(southEntrance);
+        deployProbe(kitchenRoom);
     }
 
     public static void main(String[] args){
+        Scanner scan = new Scanner(System.in);
+        Helpers.addInputScanner(scan);
         runHouseTest();
     }
 }

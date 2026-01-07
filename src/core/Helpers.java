@@ -1,27 +1,16 @@
 package core;
-import java.util.Scanner;
+
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Scanner;
 
-public class Question {
-    String question;
-    ArrayList<String> allowed;
-    private static Scanner scan = new Scanner(System.in);
+public class Helpers {
+    public static Scanner scan;
 
-    public Question(String question, ArrayList<String> allowed){
-        this.question = question;
-        this.allowed = allowed;
+    public static void addInputScanner(Scanner scanner){
+        scan = scanner;
     }
 
-    public String promptUser(){
-        return promptUser(false, true);
-    }
-
-    public String promptUser(boolean caseSensitive){
-        return promptUser(caseSensitive, true);
-    }
-
-    public String promptUser(boolean caseSensitive, boolean correctToOriginal){
+    public static String promptUser(String question, ArrayList<String> allowed, boolean caseSensitive, boolean correctToOriginal){
         ArrayList<String> modifiedAllowed = new ArrayList<String>();
         for (String eachString : allowed){
             modifiedAllowed.add(new String(eachString));
@@ -47,13 +36,5 @@ public class Question {
             }
         }
         return userInput;
-    }
-
-    // example usage
-    public static void main(String[] args){
-        Question q1 = new Question("What is your username?", new ArrayList<>(
-            List.of("Kipikii", "Sordem")));
-        String sample = q1.promptUser(false);
-        System.out.println("Your username is " + sample);
     }
 }
