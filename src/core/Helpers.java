@@ -16,15 +16,15 @@ public class Helpers {
             modifiedAllowed.add(new String(eachString));
         }
         if (!caseSensitive){
-            int index = 0;
-            for (String string : modifiedAllowed){
-                modifiedAllowed.set(index++, string.toLowerCase());
+            for (int i = 0; i < modifiedAllowed.size(); i++){
+                String string = modifiedAllowed.get(i);
+                modifiedAllowed.set(i, string.toLowerCase());
             }
         } 
         String userInput = "";
         while (!modifiedAllowed.contains(userInput)){
             if (userInput.equals("")){
-                System.out.println(question);
+                System.out.println("\n"+question);
             }
             System.out.print("> ");
             userInput = scan.nextLine();

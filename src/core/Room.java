@@ -3,7 +3,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Scanner;
-
 import interactables.LeverInteractable;
 
 public class Room {
@@ -191,13 +190,14 @@ public class Room {
         ArrayList<String> interactableNames = new ArrayList<String>();
         int index = 0;
         String directionString;
-        for (Room room : this.getConnections()){
+        for (int i = 0; i < this.getConnections().size(); i++){
+            Room room = this.getConnections().get(i);
             if (room != null){
                 directionString = intToDirection(index) + ": ";
                 connectionNames.add(directionString + "\""+room.getName()+"\"");
             }
-            index++;
         }
+
         for (Entity entity : this.getEntities()){entityNames.add(entity.getName());}
         for (Item item : this.getItems()){itemNames.add(item.getName());}
         for (Interactable interactable : this.getInteractables()){interactableNames.add(interactable.getName());}
@@ -206,6 +206,7 @@ public class Room {
 
     public static void deployProbe(Room startingRoom){
         System.out.println("You can quit at any time by typing \"quit\" into the console when the game says \"You're in...\".");
+        System.out.println("Type \"get\" to pick up items, and \"interact\" to interact with objects.");
         Room currentRoom = startingRoom;
         String questionString;
         int loopingInt;
@@ -271,8 +272,14 @@ public class Room {
                     currentRoom.getInteractables().get(0).interact();
                 } else if (interactableCount < 1) {
                     System.out.println("There isn't anything to interact with.");
-                    continue;
                 } else {
+                    System.out.println("Available interactables: ");
+                    for (int i = 0; i < currentRoom.getInteractables().size(); i++){
+                        Interactable item = currentRoom.getInteractables().get(i);
+                        if (i > 0){System.out.print(", ");}
+                        System.out.print(item.getName());
+                    }
+                    System.out.println();
                     userInputString = Helpers.promptUser("Which object do you want to interact with?", availableInteractsArrayList, false, false);
                     // check each interactable in the room to see if they are the desired object, then interact
                     for (Interactable interactable : currentRoom.getInteractables()){
@@ -287,17 +294,24 @@ public class Room {
                     currentRoom.getItems().remove(currentRoom.getItems().get(0));
                 } else if (itemCount < 1){
                     System.out.println("There isn't anything to pick up.");
-                    continue;
                 } else {
+                    System.out.println("Available items: ");
+                    for (int i = 0; i < currentRoom.getItems().size(); i++){
+                        Item item = currentRoom.getItems().get(i);
+                        if (i > 0){System.out.print(", ");}
+                        System.out.print(item.getName());
+                    }
+                    System.out.println();
                     userInputString = Helpers.promptUser("What would you like to pick up?",
                     availableItemsArrayList, false, false);
                     int index = 0;
-                    for (Item item : currentRoom.getItems()){
+                    for (int i = 0; i < currentRoom.getItems().size(); i++){
+                        Item item = currentRoom.getItems().get(i);
                         if (item.getPossible().contains(userInputString)){
                             playerEntity.updateInventory(item, 1);
                             currentRoom.getItems().remove(currentRoom.getItems().get(index));
+                            System.out.println(String.format("You took the %s.", currentRoom.getItems().get(i).getName()));
                         }
-                        index++;
                     }
                 }
             // else must be a direction
@@ -337,11 +351,12 @@ public class Room {
         
         Room secretBasement = new Room("Secret Basement", new ArrayList<Item>(List.of(
             new Item("Photo", "A picture of someone dear rests on the ground.", 
-            new ArrayList<String>(List.of("Photo"))))), 1);
+            new ArrayList<String>(List.of("Photo"))), 
+            new Item("Diary"))), 1);
 
         LeverInteractable secretBasementLever = new LeverInteractable("Switch", "There is a switch on the wall.", 
-        "You flip the switch from OFF to ON. You hear something shift in the distance.", 
-        "You flip the switch from ON to OFF. You hear something shift in the distance.", 
+        "You flip the switch from OFF to ON. You hear something shift North of here.", 
+        "You flip the switch from ON to OFF. You hear something shift North of here.", 
         new ArrayList<String>(List.of("Switch", "Pull Switch", "Use Switch", "Flip Switch", "Lever", "Pull Lever", "Use Lever", "Flip Lever")),
         "Basement Door");
 
