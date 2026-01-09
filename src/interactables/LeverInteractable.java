@@ -45,6 +45,6 @@ public class LeverInteractable extends Interactable {
         r1.getInteractables().add(lever);
         r1.connectRooms(r2, "n");
         r1.getConnectionRequirements().set(1, "Lever");
-        Room.deployProbe(r1);
+        Room.deployPlayer(r1);
     }
 }

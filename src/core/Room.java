@@ -13,6 +13,7 @@ public class Room {
     private ArrayList<Item> inRoomItems;
     private ArrayList<Interactable> inRoomInteractables;
     private String descriptionString;
+    public Vector3 position;
 
     public Room(String name){
         this(name, new ArrayList<Room>(Collections.nCopies(6, (Room) null)), new ArrayList<String>(Collections.nCopies(6, (String) null)),new ArrayList<Entity>(), new ArrayList<Item>(), new ArrayList<Interactable>(), "You're in " + name + ".");
@@ -39,6 +40,7 @@ public class Room {
         this.inRoomItems = items;
         this.inRoomInteractables = interactables;
         this.descriptionString = "You're in " + name + ". " + description;
+        this.position = null;
     }
 
     public String getName(){return nameString;}
@@ -86,6 +88,7 @@ public class Room {
                 index = 5;
                 break;
             default:
+                System.out.println("Bad input into directionToInt");
                 return -1;
         }
         return index;
@@ -204,7 +207,7 @@ public class Room {
         return String.format("\"%s\" is connected to %s, contains %s entities, %s interactables, %s items", this.getName(), connectionNames, entityNames, interactableNames, itemNames);
     }
 
-    public static void deployProbe(Room startingRoom){
+    public static void deployPlayer(Room startingRoom){
         System.out.println("You can quit at any time by typing \"quit\" into the console when the game says \"You're in...\".");
         System.out.println("Type \"get\" to pick up items, and \"interact\" to interact with objects.");
         Room currentRoom = startingRoom;
@@ -318,7 +321,6 @@ public class Room {
             } else {
                 currentRoom = currentRoom.getConnections().get(directionToInt(userInputString));
             }
-            System.out.println();
         }
         
     }
@@ -351,13 +353,13 @@ public class Room {
         
         Room secretBasement = new Room("Secret Basement", new ArrayList<Item>(List.of(
             new Item("Photo", "A picture of someone dear rests on the ground.", 
-            new ArrayList<String>(List.of("Photo"))), 
-            new Item("Diary"))), 1);
+            new ArrayList<String>(List.of("photo"))), 
+            new Item("Diary", "There is a diary here.", new ArrayList<String>(List.of("diary"))))), 1);
 
         LeverInteractable secretBasementLever = new LeverInteractable("Switch", "There is a switch on the wall.", 
         "You flip the switch from OFF to ON. You hear something shift North of here.", 
         "You flip the switch from ON to OFF. You hear something shift North of here.", 
-        new ArrayList<String>(List.of("Switch", "Pull Switch", "Use Switch", "Flip Switch", "Lever", "Pull Lever", "Use Lever", "Flip Lever")),
+        new ArrayList<String>(List.of("switch", "pull switch", "use switch", "flip switch", "lever", "pull lever", "use lever", "flip lever")),
         "Basement Door");
 
         southEntrance.connectRooms(centerEntrance, "n");
@@ -391,7 +393,7 @@ public class Room {
         childBedRoomBathRoom.connectRooms(childCloset, "s");
         childCloset.connectRoomsConditional(secretBasement, "d", "Basement Door");
         westAtticRoom.connectRooms(eastAtticRoom, "e");
-        deployProbe(kitchenRoom);
+        deployPlayer(kitchenRoom);
     }
 
     public static void main(String[] args){

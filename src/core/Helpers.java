@@ -6,9 +6,7 @@ import java.util.Scanner;
 public class Helpers {
     public static Scanner scan;
 
-    public static void addInputScanner(Scanner scanner){
-        scan = scanner;
-    }
+    public static void addInputScanner(Scanner scanner){scan = scanner;}
 
     public static String promptUser(String question, ArrayList<String> allowed, boolean caseSensitive, boolean correctToOriginal){
         ArrayList<String> modifiedAllowed = new ArrayList<String>();
