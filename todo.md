@@ -1,10 +1,11 @@
-- [ ] Create a method that randomly generates a dungeon.
+- [x] Create a method that randomly generates a dungeon.
   - Idea: Send out probe w/ lifespan that moves in random directions
     - Random chance for probe to spawn another probe of the same lifespan
     - When finishing process, add a few rogue connections that will possibly connect rooms that are far away from each other
   - Inspiration from Into Ruins
   - [ ] Add interactables that opens doors/passages
   - [ ] Have items on the ground
+  - [ ] Create room blueprints that connect multiple rooms into one larger room
 - [ ] Add the ability to check your player's inventory + stats.
 - [ ] Create enemy monsters.
   - [ ] Pathfinding / Wandering AI?
